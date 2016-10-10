@@ -60,9 +60,6 @@ critics = {
         }
 }
 
-#打分
-# def topMatches(prefs,person,n=5,similarity=sim_distance()):
-
 
 # 皮尔逊相关系数
 
@@ -110,3 +107,39 @@ def sim_distance(prefs, person1, person2):
                           for item in prefs[person1] if item in prefs[person2]])
 
     return 1 / (1 + sqrt(sum_of_squares))
+
+
+# 打分
+def topMatches(prefs, person, n=5, similarity=sim_distance):
+    scores = [(similarity(prefs, person, other), other)
+              for other in prefs if other != person]
+    scores.sort()
+    scores.reverse()
+    return scores[0:n]
+
+
+# 推荐
+def getRecommendations(prefs, person, similarity=sim_distance):
+    totals = {}
+    simSums = {}
+    for other in prefs:
+        if other == person:
+            continue
+
+        sim = similarity(prefs, person, other)
+
+        if sim <= 0:
+            continue
+
+        for item in prefs[other]:
+            if item not in prefs[person] or prefs[person][item] == 0:
+                totals.setdefault(item, 0)
+                totals[item] += prefs[other][item] * sim
+
+                simSums.setdefault(item, 0)
+                simSums[item] += sim
+
+    rankings = [(total / simSums[item], item) for item, total in totals.items()]
+    rankings.sort()
+    rankings.reverse()
+    return rankings
